@@ -1,0 +1,143 @@
+/*
+### How is it working
+- The styling of body is first adjusting the the stars div a little bit using flex.
+- Then the styling of stars is placing the div properly and making the div 120% in width and height and then rotating it by 45deg, so that the stars can fall from the right border of the box.
+- Now comes the main part that is making and animating the stars:
+    -> First we set some variables for the size and color of the star
+    -> Then we apply styling to the star element, note that some of the values are set as variables which are randomly defined which means each star has some different value.
+    -> Then we apply the animation for fall and tail-fade.
+    -> The loop function is to provide random values to the variables used.
+    -> The fall is responsible for bringing the star from far away to the bottom
+    -> The before and after is used to create the full body of the star
+*/
+
+
+// A mixin is like a function, the css written inside the mixin can be reused using @include tag
+@mixin sp-layout{
+  @media screen and (max-width: 750px){
+    // The content allows us to place the css code at the place of the @content tag while using the mixin using @include tag. The css present in the curly brackets passed when the mixin is used will be placed at all the places where @content is used in the mixin.
+    @content;
+  }
+}
+
+// Body contains only the stars div
+body{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: radial-gradient(ellipse at bottom, #0d1d31 0%, #0c0d13 100%);
+  overflow: hidden;
+}
+
+// Functions allow to make complex operations that can be easily understood
+// This function returns a random number between min and max
+@function random_range($min, $max){
+  $rand: random();
+  $random_range: $min + floor($rand * (($max - $min)+1));
+  @return $random_range;
+}
+
+// Styling the stars component that contain the stars
+.stars{
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 120%;
+  height: 120%;
+  transform: rotate(-45deg);
+}
+
+// Styling the shooting stars
+.star{
+  // Variables to define a shooting star
+  $star-count: 50;
+  --star-color: hsl(196, 78%, 61%);
+  --star-tail-length: 6em;
+  --star-tail-height: 2px;
+  --star-width: calc(var(--star-tail-length)/6);
+  --fall-duration: 9s;
+  --tail-fade-duration: var(--fall-duration);
+
+  position: absolute;
+  top: var(--top-offset);
+  left: 0;
+  width: var(--star-tail-length);
+  height: var(--star-tail-height);
+  color: var(--star-color);
+  background: linear-gradient(45deg, currentColor, transparent);
+  border-radius: 50%;
+  filter: drop-shadow(0 0 6px currentColor);
+  transform: translate3d(104em, 0, 0);
+  animation: fall var(--fall-duration) var(--fall-delay) linear infinite, tail-fade var(--tail-fade-duration) var(--fall-delay) ease-out infinite;
+
+  @include sp-layout{
+    // For moble performace, tail-fade animation will be removed
+    animation: fall var(--fall-duration) var(--fall-delay) linear infinite;
+  }
+
+  // Looping through the stars and providing them random values
+  @for $i from 1 through $star-count{
+    &:nth-child(#{$i}){
+      --star-tail-length: #{random_range(500em, 750em)/100};
+      --top-offset: #{random_range(0vh, 10000vh)/100};
+      --fall-duration: #{random_range(6000, 12000s)/1000};
+      --fall-delay: #{random_range(0, 10000s)/1000};
+    }
+  }
+
+  &::before, &::after{
+    position: absolute;
+    content: '';
+    top: 0;
+    left: calc(var(--star-width)/-2);
+    width: var(--star-width);
+    height: 100%;
+    background: linear-gradient(45deg, transparent, currentColor, transparent);
+    border-radius: inherit;
+    animation: blink 2s linear infinite;
+  }
+
+  &::before {
+    transform: rotate(45deg);
+  }
+
+  &::after {
+    transform: rotate(-45deg);
+  }
+}
+
+@keyframes fall {
+  to {
+    transform: translate3d(-30em, 0, 0);
+  }
+}
+
+@keyframes tail-fade {
+
+  0%,
+  50% {
+    width: var(--star-tail-length);
+    opacity: 1;
+  }
+
+  70%,
+  80% {
+    width: 0;
+    opacity: 0.4;
+  }
+
+  100% {
+    width: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0.6;
+  }
+}
+
+
+
